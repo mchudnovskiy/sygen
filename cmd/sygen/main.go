@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/mchudnovskiy/sygen/cmd"
+	"github.com/mchudnovskiy/sygen/cmd/sygen/cmd"
 )
 
 func main() {
