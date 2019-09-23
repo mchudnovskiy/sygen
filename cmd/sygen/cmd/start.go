@@ -27,7 +27,7 @@ var startCmd = &cobra.Command{
 	Short: "Start Sygen traffic generator",
 	Run: func(cmd *cobra.Command, args []string) {
 		a.Payload = payloadFilePath //TODO open and read body file
-		a.Headers = make(map[string]string) //TODO open and read headers file and conver it's conent to map
+		a.Headers = make(map[string]string) //TODO open  and read headers file and conver it's conent to map
 		s := server.New(a)
 		if err := s.Start(); err != nil {
 			fmt.Println("error")
