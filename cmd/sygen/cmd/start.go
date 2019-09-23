@@ -8,18 +8,27 @@ import (
 	"github.com/spf13/cobra"
 )
 
+
 func init() {
+	startCmd.Flags().IntVarP(&a.RequestRate, "rate", "r", 1, "Request rate per second")
+	startCmd.Flags().IntVarP(&a.ExecutionTime, "time", "t", 10, "Execution time in seconds")
+	startCmd.Flags().StringVarP(&a.Endpoint, "endpoint", "e", "", "Endpoint for traffic. Example: http||localhost:90/test or mq||localhost(1414)/TEST.SVRCONN/TEST.QUEUE")
+	startCmd.Flags().StringVarP(&payloadFilePath, "payload", "p", "", "Payload file path")
+	startCmd.Flags().StringVarP(&headersFilePath, "headers", "", "", "Headers file path")
 	rootCmd.AddCommand(startCmd)
 }
+
+var a = &settings.Args{}
+var payloadFilePath string
+var headersFilePath string
 
 var startCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Start Sygen traffic generator",
 	Run: func(cmd *cobra.Command, args []string) {
-		s := server.New(&settings.Args{
-			ExecutionTime: 100,
-			RequestRate: 10,
-		})
+		a.Payload = payloadFilePath //TODO open and read body file
+		a.Headers = make(map[string]string) //TODO open and read headers file and conver it's conent to map
+		s := server.New(a)
 		if err := s.Start(); err != nil {
 			fmt.Println("error")
 		}
