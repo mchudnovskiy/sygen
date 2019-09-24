@@ -7,7 +7,9 @@ import (
 
 	"github.com/spf13/cobra"
 )
-
+var a = &settings.Args{}
+var payloadFilePath string
+var headersFilePath string
 
 func init() {
 	startCmd.Flags().IntVarP(&a.RequestRate, "rate", "r", 1, "Request rate per second")
@@ -18,9 +20,7 @@ func init() {
 	rootCmd.AddCommand(startCmd)
 }
 
-var a = &settings.Args{}
-var payloadFilePath string
-var headersFilePath string
+
 
 var startCmd = &cobra.Command{
 	Use:   "start",
