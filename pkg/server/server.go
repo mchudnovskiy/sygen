@@ -35,16 +35,19 @@ func (s *Server) Stop() {
 func tick(timeInSecs int, rate int, endpoint string) {
 	ticker := time.NewTicker(time.Duration(1000/rate) * time.Millisecond)
 	done := make(chan bool)
-	s, _ := sender.NewSender(endpoint)
+	s, err := sender.NewSender(endpoint)
+	if (err!=nil) {
+		panic("impossible to create sender: " + err.Error())
+	}
 	go func() {
 		for {
 			select {
 			case <-done:
 				return
 			case t := <-ticker.C:
-				go func() {
+				 func() {
 					fmt.Printf("run query at: %v\n", t)
-					s.Send("payload", map[string]string{
+					go s.Send("payload", map[string]string{
 						"header": "value",
 					})
 				}()

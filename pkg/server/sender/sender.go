@@ -1,8 +1,10 @@
 package sender
 
 import (
+	"errors"
 	"fmt"
-	//	"github.com/ibm-messaging/mq-golang-jms20/mqjms"
+	"github.com/ibm-messaging/mq-golang-jms20/mqjms"
+	"strconv"
 	"strings"
 )
 
@@ -24,13 +26,10 @@ func NewSender(endpoint string) (Sender, error) {
 		s, err := newMqSender(strings.Split(endpoint, "||")[1])
 		return s, err
 	}
-
 	return nil, nil
 }
 
-func newMqSender(endpoint string) (Sender, error) {
-	return make(mqSender), nil
-}
+
 
 type httpSender struct {
 	e string
@@ -44,7 +43,17 @@ func (hs *httpSender) Send(payload string, headers map[string]string) error {
 
 type mqSender struct {
 	connectionParams map[string]string
+	cf *mqjms.ConnectionFactoryImpl
+	ctx *mqjms.ContextImpl
+	q mqjms.QueueImpl
 }
+
+func newMqSender(endpoint string) (Sender, error) {
+	mqs := &mqSender{}
+	err := mqs.initConnection(endpoint)
+	return mqs, err
+}
+
 
 func (mqs *mqSender) initConnection(e string) error {
 	mqs.connectionParams = make(map[string]string)
@@ -53,20 +62,31 @@ func (mqs *mqSender) initConnection(e string) error {
 	mqs.connectionParams["host"] = strings.Split(e, "/")[0]
 	mqs.connectionParams["port"] = strings.Split(e, "/")[1]
 	mqs.connectionParams["queue"] = strings.Split(e, "/")[4]
+
+	port, _ := strconv.Atoi(mqs.connectionParams["port"])
+	mqs.cf = &mqjms.ConnectionFactoryImpl{
+		ChannelName: mqs.connectionParams["channel"],
+		Hostname:    mqs.connectionParams["host"],
+		QMName:      mqs.connectionParams["qm"],
+		PortNumber:  port,
+	}
+	ctx, err := mqs.cf.CreateContext()
+	if err == nil {
+		mqs.ctx = ctx.(*mqjms.ContextImpl)
+	} else {
+		return errors.New(err.GetErrorCode())
+	}
+		
+	
+	mqs.q = (ctx.CreateQueue(mqs.connectionParams["queue"])).(mqjms.QueueImpl)
+
+	return nil
 }
 
 //Send method sends a message via mq connection
 func (mqs *mqSender) Send(payload string, headers map[string]string) error {
 
-	// cf := &mqjms.ConnectionFactoryImpl {
-	// 	ChannelName = mqs.connectionParams["channel"],
-	// 	Hostname = mqs.connectionParams["host"],
-	// 	QMName = mqs.connectionParams["qm"],
-	// 	PortNumber = mqs.connectionParams["port"],
-	// }
-	// ctx, err := cf.CreateContext()
-	// queue = ctx.CreateQueue(mqs.connectionParamsp["queue"])
-	// errSend := context.CreateProducer().Send(queue, context.CreateTextMessageWithString(payload))
+	mqs.ctx.CreateProducer().Send(mqs.q, mqs.ctx.CreateTextMessageWithString(payload))
 
 	return nil
 }

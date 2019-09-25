@@ -1,15 +1,15 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
 	"fmt"
+	"github.com/spf13/cobra"
 	"os"
 )
 
 var rootCmd = &cobra.Command{
 	Use:   "sygen",
 	Short: "Sygen is a very fast traffic generator for load testing",
-	Long: `A Fast and Flexible Traffic Generator built in Go.`,
+	Long:  `A Fast and Flexible Traffic Generator built in Go.`,
 }
 
 // Execute is a runner of sygen root command
