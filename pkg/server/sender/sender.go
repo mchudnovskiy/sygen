@@ -2,6 +2,7 @@ package sender
 
 import (
 	"fmt"
+	//	"github.com/ibm-messaging/mq-golang-jms20/mqjms"
 	"strings"
 )
 
@@ -20,13 +21,15 @@ func NewSender(endpoint string) (Sender, error) {
 		}
 		return s, nil
 	case "mq":
-		s := &mqSender{
-			e: strings.Split(endpoint, "||")[1],
-		}
-		return s, nil
+		s, err := newMqSender(strings.Split(endpoint, "||")[1])
+		return s, err
 	}
 
 	return nil, nil
+}
+
+func newMqSender(endpoint string) (Sender, error) {
+	return make(mqSender), nil
 }
 
 type httpSender struct {
@@ -40,11 +43,30 @@ func (hs *httpSender) Send(payload string, headers map[string]string) error {
 }
 
 type mqSender struct {
-	e string
+	connectionParams map[string]string
+}
+
+func (mqs *mqSender) initConnection(e string) error {
+	mqs.connectionParams = make(map[string]string)
+	mqs.connectionParams["qm"] = strings.Split(e, "/")[3]
+	mqs.connectionParams["channel"] = strings.Split(e, "/")[2]
+	mqs.connectionParams["host"] = strings.Split(e, "/")[0]
+	mqs.connectionParams["port"] = strings.Split(e, "/")[1]
+	mqs.connectionParams["queue"] = strings.Split(e, "/")[4]
 }
 
 //Send method sends a message via mq connection
-func (ms *mqSender) Send(payload string, headers map[string]string) error {
-	fmt.Printf("MQ Sender is sending payload: %s at endpoint %s \n\n", payload, ms.e)
+func (mqs *mqSender) Send(payload string, headers map[string]string) error {
+
+	// cf := &mqjms.ConnectionFactoryImpl {
+	// 	ChannelName = mqs.connectionParams["channel"],
+	// 	Hostname = mqs.connectionParams["host"],
+	// 	QMName = mqs.connectionParams["qm"],
+	// 	PortNumber = mqs.connectionParams["port"],
+	// }
+	// ctx, err := cf.CreateContext()
+	// queue = ctx.CreateQueue(mqs.connectionParamsp["queue"])
+	// errSend := context.CreateProducer().Send(queue, context.CreateTextMessageWithString(payload))
+
 	return nil
 }

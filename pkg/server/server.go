@@ -35,6 +35,7 @@ func (s *Server) Stop() {
 func tick(timeInSecs int, rate int, endpoint string) {
 	ticker := time.NewTicker(time.Duration(1000/rate) * time.Millisecond)
 	done := make(chan bool)
+	s, _ := sender.NewSender(endpoint)
 	go func() {
 		for {
 			select {
@@ -43,7 +44,6 @@ func tick(timeInSecs int, rate int, endpoint string) {
 			case t := <-ticker.C:
 				go func() {
 					fmt.Printf("run query at: %v\n", t)
-					s, _ := sender.NewSender(endpoint)
 					s.Send("payload", map[string]string{
 						"header": "value",
 					})
