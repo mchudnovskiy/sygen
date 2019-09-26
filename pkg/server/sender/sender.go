@@ -4,8 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/ibm-messaging/mq-golang-jms20/mqjms"
+	"net/http"
 	"strconv"
 	"strings"
+	"io"
 )
 
 // Sender is a default interface for sending messager over deffirent transports
@@ -15,21 +17,19 @@ type Sender interface {
 
 // NewSender is a factory method creates a concret sender by endpoint parsing
 func NewSender(endpoint string) (Sender, error) {
-	protocol := strings.Split(endpoint, "||")[0]
+	protocol := strings.Split(endpoint, "://")[0]
 	switch strings.ToLower(protocol) {
 	case "http":
 		s := &httpSender{
-			e: strings.Split(endpoint, "||")[1],
+			e: endpoint,
 		}
 		return s, nil
 	case "mq":
-		s, err := newMqSender(strings.Split(endpoint, "||")[1])
+		s, err := newMqSender(strings.Split(endpoint, "://")[1])
 		return s, err
 	}
 	return nil, nil
 }
-
-
 
 type httpSender struct {
 	e string
@@ -37,15 +37,35 @@ type httpSender struct {
 
 //Send method sends a message via http connection
 func (hs *httpSender) Send(payload string, headers map[string]string) error {
-	fmt.Printf("HTTP Sender is sending payload: %s at endpoint %s \n\n", payload, hs.e)
+	fmt.Printf("HTTP Sender is sending payload: %s at endpoint %s \n", payload, hs.e)
+	resp, err := http.Get(hs.e)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	
+	s, err := copyToString(resp.Body)
+	if err!=nil {
+		return err
+	}
+	fmt.Printf("Response: %s \n\n", s)
+
 	return nil
+}
+
+func copyToString(r io.Reader) (res string, err error) {
+	var sb strings.Builder
+	if _, err = io.Copy(&sb, r); err == nil {
+		res = sb.String()
+	}
+	return
 }
 
 type mqSender struct {
 	connectionParams map[string]string
-	cf *mqjms.ConnectionFactoryImpl
-	ctx *mqjms.ContextImpl
-	q mqjms.QueueImpl
+	cf               *mqjms.ConnectionFactoryImpl
+	ctx              *mqjms.ContextImpl
+	q                mqjms.QueueImpl
 }
 
 func newMqSender(endpoint string) (Sender, error) {
@@ -53,7 +73,6 @@ func newMqSender(endpoint string) (Sender, error) {
 	err := mqs.initConnection(endpoint)
 	return mqs, err
 }
-
 
 func (mqs *mqSender) initConnection(e string) error {
 	mqs.connectionParams = make(map[string]string)
@@ -76,8 +95,7 @@ func (mqs *mqSender) initConnection(e string) error {
 	} else {
 		return errors.New(err.GetErrorCode())
 	}
-		
-	
+
 	mqs.q = (ctx.CreateQueue(mqs.connectionParams["queue"])).(mqjms.QueueImpl)
 
 	return nil
