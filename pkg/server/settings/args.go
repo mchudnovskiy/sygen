@@ -1,3 +1,4 @@
+//Package settings contains configuration structures for Sygen Server
 package settings
 
 import (

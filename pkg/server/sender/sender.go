@@ -1,13 +1,15 @@
+//Package sender consists of different senders and exported sender intreface for server logic
 package sender
+
 
 import (
 	"errors"
 	"fmt"
 	"github.com/ibm-messaging/mq-golang-jms20/mqjms"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
-	"io"
 )
 
 // Sender is a default interface for sending messager over deffirent transports
@@ -43,9 +45,9 @@ func (hs *httpSender) Send(payload string, headers map[string]string) error {
 		return err
 	}
 	defer resp.Body.Close()
-	
+
 	s, err := copyToString(resp.Body)
-	if err!=nil {
+	if err != nil {
 		return err
 	}
 	fmt.Printf("Response: %s \n\n", s)
@@ -107,4 +109,5 @@ func (mqs *mqSender) Send(payload string, headers map[string]string) error {
 	mqs.ctx.CreateProducer().Send(mqs.q, mqs.ctx.CreateTextMessageWithString(payload))
 
 	return nil
+
 }

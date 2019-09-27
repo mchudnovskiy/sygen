@@ -1,3 +1,4 @@
+//Package cmd is a cobra commands store for Sygen project
 package cmd
 
 import (

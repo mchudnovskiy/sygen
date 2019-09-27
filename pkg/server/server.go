@@ -1,3 +1,4 @@
+//Package server is a main in Sygen project and contains server logic for different senders
 package server
 
 import (
